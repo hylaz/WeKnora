@@ -220,7 +220,6 @@ func LoadConfig() (*Config, error) {
 	promptTemplates, err := loadPromptTemplates(configDir)
 	if err != nil {
 		fmt.Printf("Warning: failed to load prompt templates from directory: %v\n", err)
-		// 如果目录加载失败，使用配置文件中的模板（如果有）
 	} else if promptTemplates != nil {
 		cfg.PromptTemplates = promptTemplates
 	}
