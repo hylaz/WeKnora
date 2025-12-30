@@ -16,10 +16,10 @@ require (
 	github.com/hibiken/asynq v0.25.1
 	github.com/mark3labs/mcp-go v0.43.0
 	github.com/minio/minio-go/v7 v7.0.90
-	github.com/neo4j/neo4j-go-driver/v6 v6.0.0-alpha.1
+	github.com/neo4j/neo4j-go-driver/v6 v6.0.0
 	github.com/ollama/ollama v0.13.5
 	github.com/panjf2000/ants/v2 v2.11.2
-	github.com/parquet-go/parquet-go v0.25.0
+	github.com/parquet-go/parquet-go v0.26.3
 	github.com/pganalyze/pg_query_go/v6 v6.1.0
 	github.com/pgvector/pgvector-go v0.3.0
 	github.com/qdrant/go-client v1.16.1
@@ -54,7 +54,7 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
-	github.com/andybalholm/brotli v1.1.0 // indirect
+	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
@@ -118,7 +118,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.1 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -137,9 +137,11 @@ require (
 	github.com/olekukonko/errors v1.1.0 // indirect
 	github.com/olekukonko/ll v0.1.3 // indirect
 	github.com/olekukonko/tablewriter v1.1.2 // indirect
+	github.com/parquet-go/bitpack v1.0.0 // indirect
+	github.com/parquet-go/jsonlite v1.1.0 // indirect
 	github.com/pdevine/tensor v0.0.0-20250402003834-09d804610a08 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/pierrec/lz4/v4 v4.1.21 // indirect
+	github.com/pierrec/lz4/v4 v4.1.23 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect

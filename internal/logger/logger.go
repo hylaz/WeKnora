@@ -136,8 +136,11 @@ func GetLogger(c context.Context) *logrus.Entry {
 	if logger := c.Value(types.LoggerContextKey); logger != nil {
 		return logger.(*logrus.Entry)
 	}
+
 	newLogger := logrus.New()
-	newLogger.SetFormatter(&CustomFormatter{ForceColor: true})
+	newLogger.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
 	// 设置默认日志级别
 	newLogger.SetLevel(logrus.DebugLevel)
 	// 启用调用者信息

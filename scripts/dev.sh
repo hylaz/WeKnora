@@ -119,9 +119,10 @@ start_services() {
     
     # 解析 profile 参数
     shift  # 移除 "start" 命令本身
-    PROFILES="--profile full"
+    PROFILES="--profile dev"
     ENABLED_SERVICES=""
-    
+
+
     while [ $# -gt 0 ]; do
         case "$1" in
             --minio)
@@ -151,6 +152,9 @@ start_services() {
         esac
         shift
     done
+    
+    echo "PROFILES: $PROFILES"
+    echo "ENABLED_SERVICES: $ENABLED_SERVICES"
     
     # 启动服务
     "$DOCKER_COMPOSE_BIN" $DOCKER_COMPOSE_SUBCMD -f docker-compose.dev.yml $PROFILES up -d
@@ -255,10 +259,9 @@ start_app() {
     export DB_HOST=localhost
     export DOCREADER_ADDR=localhost:50051
     export MINIO_ENDPOINT=localhost:9000
-    export REDIS_ADDR=localhost:6379
+    export REDIS_ADDR=127.0.0.1:6379
     export OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
     export NEO4J_URI=bolt://localhost:7687
-    export QDRANT_HOST=localhost
     
     # 确保必要的环境变量已设置
     if [ -z "$DB_DRIVER" ]; then
@@ -273,7 +276,8 @@ start_app() {
     if command -v air &> /dev/null; then
         log_success "检测到 Air，使用热重载模式启动..."
         log_info "修改 Go 代码后将自动重新编译和重启"
-        air
+        #air
+        go run cmd/server/main.go
     else
         log_info "未检测到 Air，使用普通模式启动"
         log_warning "提示: 安装 Air 可以实现代码修改后自动重启"

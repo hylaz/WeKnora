@@ -20,8 +20,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    restart: unless-stopped
     stop_grace_period: 1m
+    profiles:
+      - dev
+  
 
   redis:
     image: redis:7.0-alpine
@@ -31,9 +33,10 @@ services:
     volumes:
       - redis_data_dev:/data
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    restart: always
     networks:
       - WeKnora-network-dev
+    profiles:
+      - full
 
   minio:
     image: minio/minio:latest
@@ -52,12 +55,12 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-    restart: always
     networks:
       - WeKnora-network-dev
-#    profiles:
-#      - minio
-#      - full
+    profiles:
+      - minio
+      - full
+      - dev
 
   qdrant:
     image: qdrant/qdrant:v1.16.2
@@ -69,10 +72,10 @@ services:
       - qdrant_data_dev:/qdrant/storage
     networks:
       - WeKnora-network-dev
-    restart: unless-stopped
     profiles:
       - qdrant
       - full
+#      - dev
 
   neo4j:
     image: neo4j:latest
@@ -88,12 +91,12 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
-    restart: always
     networks:
       - WeKnora-network-dev
     profiles:
       - neo4j
       - full
+      - dev
 
   docreader:
     image: wechatopenai/weknora-docreader:latest
@@ -128,7 +131,6 @@ services:
       start_period: 60s
     networks:
       - WeKnora-network-dev
-    restart: unless-stopped
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -152,7 +154,6 @@ services:
       - jaeger_data_dev:/var/lib/jaeger
     networks:
       - WeKnora-network-dev
-    restart: unless-stopped
     profiles:
       - jaeger
       - full

@@ -447,6 +447,7 @@ func initRetrieveEngineRegistry(db *gorm.DB, cfg *config.Config) (interfaces.Ret
 	}
 
 	if slices.Contains(retrieveDriver, "qdrant") {
+
 		qdrantHost := os.Getenv("QDRANT_HOST")
 		if qdrantHost == "" {
 			qdrantHost = "localhost"
@@ -563,9 +564,10 @@ func initOllamaService() (*ollama.OllamaService, error) {
 func initNeo4jClient() (neo4j.Driver, error) {
 	ctx := context.Background()
 	if strings.ToLower(os.Getenv("NEO4J_ENABLE")) != "true" {
-		logger.Debugf(ctx, "NOT SUPPORT RETRIEVE GRAPH")
+		logger.Infof(ctx, "not enable neo4j")
 		return nil, nil
 	}
+	logger.Infof(ctx, "initializing Neo4j client")
 	uri := os.Getenv("NEO4J_URI")
 	username := os.Getenv("NEO4J_USERNAME")
 	password := os.Getenv("NEO4J_PASSWORD")
@@ -590,6 +592,7 @@ func initNeo4jClient() (neo4j.Driver, error) {
 			if attempt > 1 {
 				logger.Infof(ctx, "Successfully connected to Neo4j after %d attempts", attempt)
 			}
+			logger.Infof(ctx, "Successfully connected to Neo4j")
 			return driver, nil
 		}
 

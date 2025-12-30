@@ -1,10 +1,12 @@
 package router
 
 import (
+	"context"
 	"log"
 	"os"
 	"time"
 
+	"github.com/Tencent/WeKnora/internal/logger"
 	"github.com/Tencent/WeKnora/internal/types"
 	"github.com/Tencent/WeKnora/internal/types/interfaces"
 	"github.com/hibiken/asynq"
@@ -47,10 +49,11 @@ func NewAsynqServer() *asynq.Server {
 	srv := asynq.NewServer(
 		opt,
 		asynq.Config{
+			Logger: logger.GetLogger(context.Background()).WithField("module", "async_server"),
 			Queues: map[string]int{
-				"critical": 6, // Highest priority queue
-				"default":  3, // Default priority queue
-				"low":      1, // Lowest priority queue
+				"highest": 6, // Highest priority queue
+				"default": 3, // Default priority queue
+				"low":     1, // Lowest priority queue
 			},
 		},
 	)
