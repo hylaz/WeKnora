@@ -64,8 +64,7 @@ func (rs *redisStorage) Save(ctx context.Context, sessionID string, messages []c
 		return fmt.Errorf("failed to save to Redis: %w", err)
 	}
 
-	logger.Debugf(ctx, "[RedisStorage][Session-%s] Saved %d messages to Redis (TTL: %s)",
-		sessionID, len(messages), rs.ttl)
+	logger.Debugf(ctx, "[RedisStorage][Session-%s] Saved %d messages to Redis (TTL: %s)", sessionID, len(messages), rs.ttl)
 	return nil
 }
 

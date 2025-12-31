@@ -45,8 +45,7 @@ func NewContextManagerWithMemory(
 // AddMessage adds a message to the session context
 // This method handles the business logic: loading, appending, compression, and saving
 func (cm *contextManager) AddMessage(ctx context.Context, sessionID string, message chat.Message) error {
-	logger.Infof(ctx, "[ContextManager][Session-%s] Adding message: role=%s, content_length=%d",
-		sessionID, message.Role, len(message.Content))
+	logger.Infof(ctx, "[ContextManager][Session-%s] Adding message: role=%s, content_length=%d", sessionID, message.Role, len(message.Content))
 
 	// Log message content preview
 	contentPreview := message.Content
@@ -69,8 +68,7 @@ func (cm *contextManager) AddMessage(ctx context.Context, sessionID string, mess
 
 	// Check if compression is needed
 	tokenCount := cm.compressionStrategy.EstimateTokens(messages)
-	logger.Debugf(ctx, "[ContextManager][Session-%s] Current token count: %d (max: %d)",
-		sessionID, tokenCount, cm.maxTokens)
+	logger.Debugf(ctx, "[ContextManager][Session-%s] Current token count: %d (max: %d)", sessionID, tokenCount, cm.maxTokens)
 
 	if tokenCount > cm.maxTokens {
 		logger.Infof(ctx, "[ContextManager][Session-%s] Context exceeds max tokens (%d > %d), applying compression",
@@ -93,12 +91,7 @@ func (cm *contextManager) AddMessage(ctx context.Context, sessionID string, mess
 		return fmt.Errorf("failed to save context: %w", err)
 	}
 
-	logger.Infof(
-		ctx,
-		"[ContextManager][Session-%s] Successfully added message (total: %d messages)",
-		sessionID,
-		len(messages),
-	)
+	logger.Infof(ctx, "[ContextManager][Session-%s] Successfully added message (total: %d messages)", sessionID, len(messages))
 	return nil
 }
 
@@ -116,8 +109,7 @@ func (cm *contextManager) GetContext(ctx context.Context, sessionID string) ([]c
 	// Calculate token estimate
 	tokenCount := cm.compressionStrategy.EstimateTokens(messages)
 
-	logger.Infof(ctx, "[ContextManager][Session-%s] Retrieved %d messages (~%d tokens)",
-		sessionID, len(messages), tokenCount)
+	logger.Infof(ctx, "[ContextManager][Session-%s] Retrieved %d messages (~%d tokens)", sessionID, len(messages), tokenCount)
 
 	// Log message role distribution
 	roleCount := make(map[string]int)

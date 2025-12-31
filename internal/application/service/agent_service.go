@@ -18,7 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const MAX_ITERATIONS = 100 // Max iterations for agent execution
+const MaxIterations = 100 // Max iterations for agent execution
 
 // agentService implements agent-related business logic
 type agentService struct {
@@ -330,8 +330,8 @@ func (s *agentService) ValidateConfig(config *types.AgentConfig) error {
 		config.MaxIterations = 5 // Default
 	}
 
-	if config.MaxIterations > MAX_ITERATIONS {
-		return fmt.Errorf("max iterations too high: %d (max %d)", config.MaxIterations, MAX_ITERATIONS)
+	if config.MaxIterations > MaxIterations {
+		return fmt.Errorf("max iterations too high: %d (max %d)", config.MaxIterations, MaxIterations)
 	}
 
 	return nil
