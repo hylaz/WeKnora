@@ -96,6 +96,7 @@ export default {
     chunkCount: 'Total {count} segments',
     viewOriginal: 'View Original File',
     viewChunks: 'View Chunks',
+    viewMerged: 'Full Text',
     originalFileNotSupported: 'This file type does not support original file view. Please download to view.',
     loadOriginalFailed: 'Failed to load original file content',
     questions: 'Questions',
@@ -950,7 +951,6 @@ export default {
     normalModeDesc: 'Knowledge base RAG Q&A',
     agentModeDesc: 'Multi-step thinking, deep analysis',
     agentNotReadyTooltip: 'Agent is not ready. Please finish configuration first.',
-    agentNotReadyDetail: 'Agent is not ready. Please configure the following: {reasons}',
     agentMissingAllowedTools: 'Allowed tools',
     agentMissingSummaryModel: 'Chat Model (Summary Model)',
     agentMissingRerankModel: 'Rerank Model',
@@ -960,6 +960,7 @@ export default {
     customAgentMissingSummaryModel: 'Chat Model (Summary Model)',
     customAgentMissingRerankModel: 'Rerank Model',
     goToAgentEditor: 'Go to configure →',
+    agentNotReadyDetail: 'Agent "{agentName}" is not ready. Please configure: {reasons}',
     builtinAgentNotReadyDetail: 'Built-in agent "{agentName}" is not ready. Please configure: {reasons}',
     builtinAgentSettingName: 'Intelligent Reasoning',
     builtinNormalSettingName: 'Quick Q&A',
@@ -1229,7 +1230,7 @@ export default {
       overlapDescription: 'Number of overlapping characters between adjacent chunks (0-500)',
       separatorsLabel: 'Separators',
       separatorsDescription: 'Separators used when chunking documents',
-      separatorsPlaceholder: 'Select separators',
+      separatorsPlaceholder: 'Select or customize separators',
       separators: {
         doubleNewline: 'Double newline (\
 \

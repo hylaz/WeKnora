@@ -94,6 +94,7 @@ export default {
     chunkCount: "총 {count}개 조각",
     viewOriginal: "원본 파일 보기",
     viewChunks: "청크 보기",
+    viewMerged: "전체 텍스트",
     originalFileNotSupported: "이 파일 유형은 원본 파일 표시를 지원하지 않습니다. 다운로드하여 확인하세요",
     loadOriginalFailed: "원본 파일 내용 로드 실패",
     questions: "질문",
@@ -1357,7 +1358,7 @@ export default {
       overlapDescription: "인접 문서 청크 간의 중복 문자 수 (0-500)",
       separatorsLabel: "구분자",
       separatorsDescription: "문서 청킹 시 사용되는 구분자",
-      separatorsPlaceholder: "구분자 선택",
+      separatorsPlaceholder: "구분자 선택 또는 사용자 정의",
       separators: {
         doubleNewline: "이중 줄바꿈 (\\n\\n)",
         singleNewline: "단일 줄바꿈 (\\n)",

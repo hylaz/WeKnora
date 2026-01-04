@@ -95,6 +95,7 @@ export default {
     chunkCount: 'Всего {count} фрагментов',
     viewOriginal: 'Просмотр исходного файла',
     viewChunks: 'Просмотр фрагментов',
+    viewMerged: 'Полный текст',
     originalFileNotSupported: 'Этот тип файла не поддерживает просмотр исходного файла. Пожалуйста, загрузите для просмотра.',
     loadOriginalFailed: 'Не удалось загрузить содержимое исходного файла',
     questions: 'Вопросы',
@@ -1171,7 +1172,7 @@ export default {
       overlapDescription: 'Количество перекрывающихся символов между соседними блоками (0-500)',
       separatorsLabel: 'Разделители',
       separatorsDescription: 'Разделители, используемые при разбиении документов',
-      separatorsPlaceholder: 'Выберите разделители',
+      separatorsPlaceholder: 'Выберите или настройте разделители',
       separators: {
         doubleNewline: 'Двойной перевод строки (\\n\\n)',
         singleNewline: 'Одинарный перевод строки (\\n)',

@@ -14,6 +14,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Tencent/WeKnora/docreader/client"
@@ -3557,6 +3558,7 @@ func (s *knowledgeService) UpdateFAQEntryFieldsBatch(ctx context.Context,
 	tenantID := ctx.Value(types.TenantIDContextKey).(uint64)
 
 	enabledUpdates := make(map[string]bool)
+	tagUpdates := make(map[string]string)
 
 	// Handle ByTag updates first
 	if len(req.ByTag) > 0 {
@@ -3582,9 +3584,16 @@ func (s *knowledgeService) UpdateFAQEntryFieldsBatch(ctx context.Context,
 			}
 
 			// Collect affected IDs for retriever sync
-			if update.IsEnabled != nil && len(affectedIDs) > 0 {
-				for _, id := range affectedIDs {
-					enabledUpdates[id] = *update.IsEnabled
+			if len(affectedIDs) > 0 {
+				if update.IsEnabled != nil {
+					for _, id := range affectedIDs {
+						enabledUpdates[id] = *update.IsEnabled
+					}
+				}
+				if update.TagID != nil {
+					for _, id := range affectedIDs {
+						tagUpdates[id] = *update.TagID
+					}
 				}
 			}
 		}
@@ -3643,6 +3652,7 @@ func (s *knowledgeService) UpdateFAQEntryFieldsBatch(ctx context.Context,
 				}
 				if chunk.TagID != newTagID {
 					chunk.TagID = newTagID
+					tagUpdates[chunk.ID] = newTagID
 					needUpdate = true
 				}
 			}
@@ -3668,8 +3678,8 @@ func (s *knowledgeService) UpdateFAQEntryFieldsBatch(ctx context.Context,
 		}
 	}
 
-	// Sync enabled status to retriever engines
-	if len(enabledUpdates) > 0 {
+	// Sync to retriever engines
+	if len(enabledUpdates) > 0 || len(tagUpdates) > 0 {
 		tenantInfo := ctx.Value(types.TenantInfoContextKey).(*types.Tenant)
 		retrieveEngine, err := retriever.NewCompositeRetrieveEngine(
 			s.retrieveEngine,
@@ -3678,8 +3688,15 @@ func (s *knowledgeService) UpdateFAQEntryFieldsBatch(ctx context.Context,
 		if err != nil {
 			return err
 		}
-		if err := retrieveEngine.BatchUpdateChunkEnabledStatus(ctx, enabledUpdates); err != nil {
-			return err
+		if len(enabledUpdates) > 0 {
+			if err := retrieveEngine.BatchUpdateChunkEnabledStatus(ctx, enabledUpdates); err != nil {
+				return err
+			}
+		}
+		if len(tagUpdates) > 0 {
+			if err := retrieveEngine.BatchUpdateChunkTagID(ctx, tagUpdates); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -3809,9 +3826,27 @@ func (s *knowledgeService) UpdateFAQEntryTag(ctx context.Context, kbID string, e
 		resolvedTagID = tag.ID
 	}
 
+	// Check if tag actually changed
+	if chunk.TagID == resolvedTagID {
+		return nil
+	}
+
 	chunk.TagID = resolvedTagID
 	chunk.UpdatedAt = time.Now()
-	return s.chunkRepo.UpdateChunk(ctx, chunk)
+	if err := s.chunkRepo.UpdateChunk(ctx, chunk); err != nil {
+		return err
+	}
+
+	// Sync tag update to retriever engines
+	tenantInfo := ctx.Value(types.TenantInfoContextKey).(*types.Tenant)
+	retrieveEngine, err := retriever.NewCompositeRetrieveEngine(
+		s.retrieveEngine,
+		tenantInfo.GetEffectiveEngines(),
+	)
+	if err != nil {
+		return err
+	}
+	return retrieveEngine.BatchUpdateChunkTagID(ctx, map[string]string{chunk.ID: resolvedTagID})
 }
 
 // UpdateFAQEntryTagBatch updates tags for FAQ entries in batch.
@@ -3888,7 +3923,26 @@ func (s *knowledgeService) UpdateFAQEntryTagBatch(ctx context.Context, kbID stri
 	}
 
 	if len(chunksToUpdate) > 0 {
-		return s.chunkRepo.UpdateChunks(ctx, chunksToUpdate)
+		if err := s.chunkRepo.UpdateChunks(ctx, chunksToUpdate); err != nil {
+			return err
+		}
+
+		// Sync tag updates to retriever engines
+		tagUpdates := make(map[string]string)
+		for _, chunk := range chunksToUpdate {
+			tagUpdates[chunk.ID] = chunk.TagID
+		}
+		tenantInfo := ctx.Value(types.TenantInfoContextKey).(*types.Tenant)
+		retrieveEngine, err := retriever.NewCompositeRetrieveEngine(
+			s.retrieveEngine,
+			tenantInfo.GetEffectiveEngines(),
+		)
+		if err != nil {
+			return err
+		}
+		if err := retrieveEngine.BatchUpdateChunkTagID(ctx, tagUpdates); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -3915,18 +3969,101 @@ func (s *knowledgeService) SearchFAQEntries(ctx context.Context,
 		req.MatchCount = 50
 	}
 
-	// Prepare search parameters
-	searchParams := types.SearchParams{
-		QueryText:            secutils.SanitizeForLog(req.QueryText),
-		VectorThreshold:      req.VectorThreshold,
-		MatchCount:           req.MatchCount,
-		DisableKeywordsMatch: true,
+	// Build priority tag sets for sorting
+	hasFirstPriority := len(req.FirstPriorityTagIDs) > 0
+	hasSecondPriority := len(req.SecondPriorityTagIDs) > 0
+	hasPriorityFilter := hasFirstPriority || hasSecondPriority
+
+	firstPrioritySet := make(map[string]struct{}, len(req.FirstPriorityTagIDs))
+	for _, tagID := range req.FirstPriorityTagIDs {
+		firstPrioritySet[tagID] = struct{}{}
+	}
+	secondPrioritySet := make(map[string]struct{}, len(req.SecondPriorityTagIDs))
+	for _, tagID := range req.SecondPriorityTagIDs {
+		secondPrioritySet[tagID] = struct{}{}
 	}
 
-	// Call HybridSearch
-	searchResults, err := s.kbService.HybridSearch(ctx, kbID, searchParams)
-	if err != nil {
-		return nil, err
+	// Perform separate searches for each priority level to ensure FirstPriority results
+	// are not crowded out by higher-scoring SecondPriority results in TopK truncation
+	var searchResults []*types.SearchResult
+
+	if hasPriorityFilter {
+		// Use goroutines to search both priority levels concurrently
+		var (
+			firstResults  []*types.SearchResult
+			secondResults []*types.SearchResult
+			firstErr      error
+			secondErr     error
+			wg            sync.WaitGroup
+		)
+
+		if hasFirstPriority {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				firstParams := types.SearchParams{
+					QueryText:            secutils.SanitizeForLog(req.QueryText),
+					VectorThreshold:      req.VectorThreshold,
+					MatchCount:           req.MatchCount,
+					DisableKeywordsMatch: true,
+					TagIDs:               req.FirstPriorityTagIDs,
+				}
+				firstResults, firstErr = s.kbService.HybridSearch(ctx, kbID, firstParams)
+			}()
+		}
+
+		if hasSecondPriority {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				secondParams := types.SearchParams{
+					QueryText:            secutils.SanitizeForLog(req.QueryText),
+					VectorThreshold:      req.VectorThreshold,
+					MatchCount:           req.MatchCount,
+					DisableKeywordsMatch: true,
+					TagIDs:               req.SecondPriorityTagIDs,
+				}
+				secondResults, secondErr = s.kbService.HybridSearch(ctx, kbID, secondParams)
+			}()
+		}
+
+		wg.Wait()
+
+		// Check errors
+		if firstErr != nil {
+			return nil, firstErr
+		}
+		if secondErr != nil {
+			return nil, secondErr
+		}
+
+		// Merge results: FirstPriority first, then SecondPriority (deduplicated)
+		seenChunkIDs := make(map[string]struct{})
+		for _, result := range firstResults {
+			if _, exists := seenChunkIDs[result.ID]; !exists {
+				seenChunkIDs[result.ID] = struct{}{}
+				searchResults = append(searchResults, result)
+			}
+		}
+		for _, result := range secondResults {
+			if _, exists := seenChunkIDs[result.ID]; !exists {
+				seenChunkIDs[result.ID] = struct{}{}
+				searchResults = append(searchResults, result)
+			}
+		}
+	} else {
+		// No priority filter, search all
+		searchParams := types.SearchParams{
+			QueryText:            secutils.SanitizeForLog(req.QueryText),
+			VectorThreshold:      req.VectorThreshold,
+			MatchCount:           req.MatchCount,
+			DisableKeywordsMatch: true,
+		}
+		var err error
+		searchResults, err = s.kbService.HybridSearch(ctx, kbID, searchParams)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if len(searchResults) == 0 {
@@ -3982,9 +4119,52 @@ func (s *knowledgeService) SearchFAQEntries(ctx context.Context,
 		entries = append(entries, entry)
 	}
 
-	slices.SortFunc(entries, func(a, b *types.FAQEntry) int {
-		return int(b.Score - a.Score)
-	})
+	// Sort entries with two-level priority tag support
+	if hasPriorityFilter {
+		// getPriorityLevel returns: 0 = first priority, 1 = second priority, 2 = no priority
+		getPriorityLevel := func(tagID string) int {
+			if _, ok := firstPrioritySet[tagID]; ok {
+				return 0
+			}
+			if _, ok := secondPrioritySet[tagID]; ok {
+				return 1
+			}
+			return 2
+		}
+
+		slices.SortFunc(entries, func(a, b *types.FAQEntry) int {
+			aPriority := getPriorityLevel(a.TagID)
+			bPriority := getPriorityLevel(b.TagID)
+
+			// Compare by priority level first
+			if aPriority != bPriority {
+				return aPriority - bPriority // Lower level = higher priority
+			}
+
+			// Same priority level, sort by score descending
+			if b.Score > a.Score {
+				return 1
+			} else if b.Score < a.Score {
+				return -1
+			}
+			return 0
+		})
+	} else {
+		// No priority tags, sort by score only
+		slices.SortFunc(entries, func(a, b *types.FAQEntry) int {
+			if b.Score > a.Score {
+				return 1
+			} else if b.Score < a.Score {
+				return -1
+			}
+			return 0
+		})
+	}
+
+	// Limit results to requested match count
+	if len(entries) > req.MatchCount {
+		entries = entries[:req.MatchCount]
+	}
 
 	return entries, nil
 }
@@ -4504,6 +4684,7 @@ func (s *knowledgeService) buildFAQIndexInfoList(
 				KnowledgeID:     chunk.KnowledgeID,
 				KnowledgeBaseID: chunk.KnowledgeBaseID,
 				KnowledgeType:   types.KnowledgeTypeFAQ,
+				TagID:           chunk.TagID,
 				IsEnabled:       chunk.IsEnabled,
 			},
 		}, nil
@@ -4531,6 +4712,7 @@ func (s *knowledgeService) buildFAQIndexInfoList(
 		KnowledgeID:     chunk.KnowledgeID,
 		KnowledgeBaseID: chunk.KnowledgeBaseID,
 		KnowledgeType:   types.KnowledgeTypeFAQ,
+		TagID:           chunk.TagID,
 		IsEnabled:       chunk.IsEnabled,
 	})
 
@@ -4555,6 +4737,7 @@ func (s *knowledgeService) buildFAQIndexInfoList(
 			KnowledgeID:     chunk.KnowledgeID,
 			KnowledgeBaseID: chunk.KnowledgeBaseID,
 			KnowledgeType:   types.KnowledgeTypeFAQ,
+			TagID:           chunk.TagID,
 			IsEnabled:       chunk.IsEnabled,
 		})
 	}
@@ -5858,10 +6041,11 @@ func (s *knowledgeService) getOrCreateTagInTarget(
 }
 
 // SearchKnowledge searches knowledge items by keyword across the tenant
-func (s *knowledgeService) SearchKnowledge(ctx context.Context, keyword string, offset, limit int) ([]*types.Knowledge, bool, error) {
+// fileTypes: optional list of file extensions to filter by (e.g., ["csv", "xlsx"])
+func (s *knowledgeService) SearchKnowledge(ctx context.Context, keyword string, offset, limit int, fileTypes []string) ([]*types.Knowledge, bool, error) {
 	tenantID, ok := ctx.Value(types.TenantIDContextKey).(uint64)
 	if !ok {
 		return nil, false, werrors.NewUnauthorizedError("Tenant ID not found in context")
 	}
-	return s.repo.SearchKnowledge(ctx, tenantID, keyword, offset, limit)
+	return s.repo.SearchKnowledge(ctx, tenantID, keyword, offset, limit, fileTypes)
 }

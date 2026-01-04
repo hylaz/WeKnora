@@ -25,6 +25,7 @@ const (
 	fieldChunkID          = "chunk_id"
 	fieldKnowledgeID      = "knowledge_id"
 	fieldKnowledgeBaseID  = "knowledge_base_id"
+	fieldTagID            = "tag_id"
 	fieldEmbedding        = "embedding"
 	fieldIsEnabled        = "is_enabled"
 )
@@ -426,6 +427,58 @@ func (q *qdrantRepository) BatchUpdateChunkEnabledStatus(ctx context.Context, ch
 	return nil
 }
 
+// BatchUpdateChunkTagID updates the tag ID of chunks in batch
+func (q *qdrantRepository) BatchUpdateChunkTagID(ctx context.Context, chunkTagMap map[string]string) error {
+	log := logger.GetLogger(ctx)
+	if len(chunkTagMap) == 0 {
+		log.Warn("[Qdrant] Empty chunk tag map provided, skipping")
+		return nil
+	}
+
+	log.Infof("[Qdrant] Batch updating chunk tag ID, count: %d", len(chunkTagMap))
+
+	// Get all collections that match our base name pattern
+	collections, err := q.client.ListCollections(ctx)
+	if err != nil {
+		log.Errorf("[Qdrant] Failed to list collections: %v", err)
+		return fmt.Errorf("failed to list collections: %w", err)
+	}
+
+	// Group chunks by tag ID for batch updates
+	tagGroups := make(map[string][]string)
+	for chunkID, tagID := range chunkTagMap {
+		tagGroups[tagID] = append(tagGroups[tagID], chunkID)
+	}
+
+	// Update in all matching collections
+	for _, collectionName := range collections {
+		// Only process collections that start with our base name
+		if len(collectionName) <= len(q.collectionBaseName) ||
+			collectionName[:len(q.collectionBaseName)] != q.collectionBaseName {
+			continue
+		}
+
+		// Update chunks for each tag ID
+		for tagID, chunkIDs := range tagGroups {
+			_, err := q.client.SetPayload(ctx, &qdrant.SetPayloadPoints{
+				CollectionName: collectionName,
+				Payload:        qdrant.NewValueMap(map[string]any{fieldTagID: tagID}),
+				PointsSelector: qdrant.NewPointsSelectorFilter(&qdrant.Filter{
+					Must: []*qdrant.Condition{
+						qdrant.NewMatchKeywords(fieldChunkID, chunkIDs...),
+					},
+				}),
+			})
+			if err != nil {
+				log.Warnf("[Qdrant] Failed to update chunks with tag_id %s in %s: %v", tagID, collectionName, err)
+			}
+		}
+	}
+
+	log.Infof("[Qdrant] Batch update chunk tag ID completed")
+	return nil
+}
+
 func (q *qdrantRepository) getBaseFilter(params types.RetrieveParams) *qdrant.Filter {
 	must := make([]*qdrant.Condition, 0)
 	mustNot := make([]*qdrant.Condition, 0)
@@ -442,6 +495,10 @@ func (q *qdrantRepository) getBaseFilter(params types.RetrieveParams) *qdrant.Fi
 	}
 	if len(params.KnowledgeIDs) > 0 {
 		must = append(must, qdrant.NewMatchKeywords(fieldKnowledgeID, params.KnowledgeIDs...))
+	}
+	// Filter by tag IDs if specified
+	if len(params.TagIDs) > 0 {
+		must = append(must, qdrant.NewMatchKeywords(fieldTagID, params.TagIDs...))
 	}
 
 	if len(params.ExcludeKnowledgeIDs) > 0 {
@@ -531,6 +588,7 @@ func (q *qdrantRepository) VectorRetrieve(ctx context.Context,
 				ChunkID:         payload[fieldChunkID].GetStringValue(),
 				KnowledgeID:     payload[fieldKnowledgeID].GetStringValue(),
 				KnowledgeBaseID: payload[fieldKnowledgeBaseID].GetStringValue(),
+				TagID:           payload[fieldTagID].GetStringValue(),
 			},
 			Score: float64(point.Score),
 		}
@@ -623,6 +681,7 @@ func (q *qdrantRepository) KeywordsRetrieve(ctx context.Context,
 					ChunkID:         payload[fieldChunkID].GetStringValue(),
 					KnowledgeID:     payload[fieldKnowledgeID].GetStringValue(),
 					KnowledgeBaseID: payload[fieldKnowledgeBaseID].GetStringValue(),
+					TagID:           payload[fieldTagID].GetStringValue(),
 				},
 				Score: 1.0,
 			}
@@ -805,6 +864,7 @@ func createPayload(embedding *QdrantVectorEmbedding) map[string]*qdrant.Value {
 		fieldChunkID:         embedding.ChunkID,
 		fieldKnowledgeID:     embedding.KnowledgeID,
 		fieldKnowledgeBaseID: embedding.KnowledgeBaseID,
+		fieldTagID:           embedding.TagID,
 		fieldIsEnabled:       embedding.IsEnabled,
 	}
 	return qdrant.NewValueMap(payload)
@@ -862,6 +922,7 @@ func toQdrantVectorEmbedding(embedding *types.IndexInfo, additionalParams map[st
 		ChunkID:         embedding.ChunkID,
 		KnowledgeID:     embedding.KnowledgeID,
 		KnowledgeBaseID: embedding.KnowledgeBaseID,
+		TagID:           embedding.TagID,
 		IsEnabled:       true, // Default to enabled
 	}
 	if additionalParams != nil && slices.Contains(slices.Collect(maps.Keys(additionalParams)), fieldEmbedding) {
@@ -884,6 +945,7 @@ func fromQdrantVectorEmbedding(id string,
 		ChunkID:         embedding.ChunkID,
 		KnowledgeID:     embedding.KnowledgeID,
 		KnowledgeBaseID: embedding.KnowledgeBaseID,
+		TagID:           embedding.TagID,
 		Content:         embedding.Content,
 		Score:           embedding.Score,
 		MatchType:       matchType,
