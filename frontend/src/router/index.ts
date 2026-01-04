@@ -48,6 +48,30 @@ const router = createRouter({
           component: () => import("../views/admin/TenantDetail.vue"),
           meta: { requiresAdminAuth: true }
         },
+        {
+          path: "plugins",
+          name: "adminPlugins",
+          component: () => import("../views/admin/PluginList.vue"),
+          meta: { requiresAdminAuth: true }
+        },
+        {
+          path: "plugins/:id",
+          name: "adminPluginDetail",
+          component: () => import("../views/admin/PluginDetail.vue"),
+          meta: { requiresAdminAuth: true }
+        },
+        {
+          path: "models",
+          name: "adminModels",
+          component: () => import("../views/admin/ModelList.vue"),
+          meta: { requiresAdminAuth: true }
+        },
+        {
+          path: "models/:id",
+          name: "adminModelDetail",
+          component: () => import("../views/admin/ModelDetail.vue"),
+          meta: { requiresAdminAuth: true }
+        },
       ],
     },
     {

@@ -1,0 +1,41 @@
+export default {
+    title: "Ollama 配置",
+    description: "管理本地 Ollama 服务，查看和下载模型",
+    status: {
+      label: "Ollama 服务状态",
+      desc: '自动检测本地 Ollama 服务是否可用。如果服务未运行或地址配置错误，将显示"不可用"状态',
+      testing: "检测中",
+      available: "可用",
+      unavailable: "不可用",
+      untested: "未检测",
+      retest: "重新检测",
+    },
+    address: {
+      label: "服务地址",
+      desc: "本地 Ollama 服务的 API 地址，由系统自动检测。如需修改，请在 .env 配置文件中设置",
+      placeholder: "http://localhost:11434",
+      failed: "连接失败，请检查 Ollama 是否运行或服务地址是否正确",
+    },
+    download: {
+      title: "下载新模型",
+      descPrefix: "输入模型名称下载，",
+      browse: "浏览 Ollama 模型库",
+      placeholder: "如：qwen2.5:0.5b",
+      download: "下载",
+      downloading: "正在下载: {name}",
+    },
+    installed: {
+      title: "已下载的模型",
+      desc: "已安装在 Ollama 中的模型列表",
+      empty: "暂无已下载的模型",
+    },
+    toasts: {
+      connected: "连接成功",
+      connectFailed: "连接失败，请检查 Ollama 是否运行",
+      listFailed: "获取模型列表失败",
+      downloadFailed: "下载失败，请稍后重试",
+      downloadStarted: "已开始下载模型 {name}",
+      downloadCompleted: "模型 {name} 下载完成",
+      progressFailed: "查询下载进度失败",
+    },
+  }

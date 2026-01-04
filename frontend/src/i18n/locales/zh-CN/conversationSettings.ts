@@ -1,0 +1,151 @@
+export default {
+    description: "配置对话模式的默认行为和参数，包括Agent模式和普通模式的Prompt设置",
+    agentMode: "Agent模式",
+    normalMode: "普通模式",
+    menus: {
+      modes: "模式设置",
+      models: "模型配置",
+      thresholds: "检索阈值",
+      advanced: "高级设置",
+    },
+    models: {
+      description: "统一管理 Agent 和普通模式使用的对话/总结模型与 ReRank 模型",
+      chatGroupLabel: "思考 / 对话模型",
+      chatGroupDesc: "包含 Agent 推理与规划模型，以及普通模式默认的对话/总结模型",
+      chatModel: {
+        label: "普通模式默认对话模型",
+        desc: "普通模式默认使用的对话/总结模型，当会话未指定模型时生效",
+        placeholder: "请选择默认对话模型",
+      },
+      rerankModel: {
+        label: "普通模式默认 ReRank 模型",
+        desc: "普通模式默认使用的重排序模型",
+        placeholder: "请选择默认 ReRank 模型",
+      },
+      rerankGroupLabel: "ReRank 模型",
+      rerankGroupDesc: "包含 Agent 使用的重排序模型，以及普通模式默认 ReRank 模型",
+    },
+    thresholds: {
+      description: "调整召回与重排序的阈值与 TopK，平衡准确率与性能",
+    },
+    maxRounds: {
+      label: "历史保留轮数",
+      desc: "用于多轮上下文和问题改写的历史轮数",
+    },
+    embeddingTopK: {
+      label: "Embedding TopK",
+      desc: "向量召回阶段保留的文档数量",
+    },
+    keywordThreshold: {
+      label: "关键词阈值",
+      desc: "关键词检索的最低得分阈值",
+    },
+    vectorThreshold: {
+      label: "向量阈值",
+      desc: "向量召回的最低相似度阈值",
+    },
+    rerankTopK: {
+      label: "ReRank TopK",
+      desc: "重排序后进入答案生成的文档数量",
+    },
+    rerankThreshold: {
+      label: "ReRank 阈值",
+      desc: "重排序阶段的最低得分阈值",
+    },
+    enableRewrite: {
+      label: "开启问题改写",
+      desc: "多轮对话自动改写问题以获得更优召回",
+    },
+    enableQueryExpansion: {
+      label: "启用查询扩展",
+      desc: "召回不足时调用大模型生成扩展查询（增加时延与成本）",
+    },
+    fallbackStrategy: {
+      label: "兜底策略",
+      desc: "检索无结果时采用的处理方式",
+      fixed: "固定回复",
+      model: "交给模型继续生成",
+    },
+    fallbackResponse: {
+      label: "固定兜底回复",
+      desc: "当兜底策略为固定回复时返回的文本",
+    },
+    fallbackPrompt: {
+      label: "兜底 Prompt",
+      desc: "当选择模型兜底时使用的提示模板",
+    },
+    advanced: {
+      description: "配置问题改写、兜底策略等高级设置",
+    },
+    rewritePrompt: {
+      system: "Rewrite System Prompt",
+      user: "Rewrite User Prompt",
+      desc: "控制问题改写的系统提示词",
+      userDesc: "控制问题改写的用户提示词",
+    },
+    chatModel: {
+      label: "LLM 模型",
+      desc: "用于总结和摘要的大语言模型",
+    },
+    rerankModel: {
+      label: "ReRank 模型",
+      desc: "用于搜索结果重排序的模型（可选）",
+    },
+    contextTemplate: {
+      label: "总结Prompt",
+      desc: "用于普通模式下基于检索结果生成回答的Prompt模板",
+      placeholder: "请输入检索结果总结的Prompt模板...",
+      custom: "自定义模板",
+      disabledHint: "当前使用系统默认总结 Prompt，开启自定义后才会应用下方内容。",
+    },
+    systemPrompt: {
+      label: "系统Prompt",
+      desc: "用于普通模式对话的系统级Prompt",
+      placeholder: "请输入系统Prompt...",
+      custom: "自定义 Prompt",
+      disabledHint: "当前使用系统默认 Prompt，开启自定义后才会应用下方内容。",
+    },
+    temperature: {
+      label: "温度参数",
+      desc: "控制模型输出的随机性，0最确定，1最随机",
+    },
+    maxTokens: {
+      label: "最大Token数",
+      desc: "生成回答的最大Token数量",
+    },
+    resetSystemPrompt: {
+      header: "恢复默认系统 Prompt",
+      body: "确定要恢复为系统默认的系统 Prompt 吗？",
+    },
+    resetContextTemplate: {
+      header: "恢复默认总结 Prompt",
+      body: "确定要恢复为系统默认的总结 Prompt 吗？",
+    },
+    toasts: {
+      chatModelSaved: "LLM 模型已保存",
+      rerankModelSaved: "ReRank 模型已保存",
+      contextTemplateSaved: "总结Prompt已保存",
+      systemPromptSaved: "系统Prompt已保存",
+      temperatureSaved: "温度参数已保存",
+      maxTokensSaved: "最大Token数已保存",
+      maxRoundsSaved: "历史轮数已保存",
+      embeddingSaved: "Embedding TopK 已保存",
+      keywordThresholdSaved: "关键词阈值已保存",
+      vectorThresholdSaved: "向量阈值已保存",
+      rerankTopKSaved: "ReRank TopK 已保存",
+      rerankThresholdSaved: "ReRank 阈值已保存",
+      enableRewriteSaved: "问题改写开关已保存",
+      enableQueryExpansionSaved: "查询扩展策略已保存",
+      fallbackStrategySaved: "兜底策略已保存",
+      fallbackResponseSaved: "兜底回复已保存",
+      fallbackPromptSaved: "兜底 Prompt 已保存",
+      rewritePromptSystemSaved: "改写 System Prompt 已保存",
+      rewritePromptUserSaved: "改写 User Prompt 已保存",
+      customPromptEnabled: "已启用自定义 Prompt",
+      defaultPromptEnabled: "已使用系统默认 Prompt",
+      customContextTemplateEnabled: "已启用自定义总结 Prompt",
+      defaultContextTemplateEnabled: "已使用系统默认总结 Prompt",
+      resetSystemPromptSuccess: "已恢复为系统默认 Prompt",
+      resetContextTemplateSuccess: "已恢复为系统默认总结 Prompt",
+    },
+  }

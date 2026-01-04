@@ -1,0 +1,23 @@
+export default {
+    title: "系统信息",
+    sectionDescription: "查看系统版本信息和用户账户配置",
+    loadingInfo: "正在加载信息...",
+    retry: "重试",
+    versionLabel: "系统版本",
+    versionDescription: "当前系统的版本号",
+    buildTimeLabel: "构建时间",
+    buildTimeDescription: "系统构建的时间",
+    goVersionLabel: "Go 版本",
+    goVersionDescription: "后端使用的 Go 语言版本",
+    keywordIndexEngineLabel: "关键词索引引擎",
+    keywordIndexEngineDescription: "当前使用的关键词索引引擎",
+    vectorStoreEngineLabel: "向量存储引擎",
+    vectorStoreEngineDescription: "当前使用的向量存储引擎",
+    graphDatabaseEngineLabel: "图数据库引擎",
+    graphDatabaseEngineDescription: "当前使用的图数据库引擎",
+    unknown: "未知",
+    messages: {
+      fetchFailed: "获取系统信息失败",
+      networkError: "网络错误，请稍后重试",
+    },
+  }

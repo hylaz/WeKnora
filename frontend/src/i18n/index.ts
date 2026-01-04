@@ -1,5 +1,5 @@
 import { createI18n } from 'vue-i18n'
-import zhCN from './locales/zh-CN.ts'
+import zhCN from './locales/zh-CN/index'
 import ruRU from './locales/ru-RU.ts'
 import enUS from './locales/en-US.ts'
 import koKR from './locales/ko-KR.ts'

@@ -1,0 +1,21 @@
+export default {
+    subtitle: "企业级智能文档检索框架",
+    description: "让复杂文档理解与精准检索变得简单",
+    rag: "RAG 增强生成",
+    hybridSearch: "混合检索",
+    localDeploy: "本地部署",
+    multimodalParsing: "多模态文档解析",
+    hybridSearchEngine: "混合检索引擎",
+    ragQandA: "RAG 智能问答",
+    independentTenant: "独立租户空间",
+    fullApiAccess: "完整 API 访问",
+    knowledgeBaseManagement: "知识库管理",
+    carousel: {
+      agenticRagTitle: "Agentic RAG",
+      agenticRagDesc: "问题改写 + 智能召回 + 重排序",
+      hybridSearchTitle: "混合检索策略",
+      hybridSearchDesc: "BM25 + 向量 + 知识图谱",
+      smartDocRetrievalTitle: "智能文档检索",
+      smartDocRetrievalDesc: "PDF/Word/图片多格式解析",
+    },
+  }

@@ -37,6 +37,14 @@
               <t-icon name="usergroup" />
               <span>{{ $t('admin.menu.tenants') }}</span>
             </t-menu-item>
+            <t-menu-item value="/admin/plugins">
+              <t-icon name="app" />
+              <span>{{ $t('admin.menu.plugins') }}</span>
+            </t-menu-item>
+            <t-menu-item value="/admin/models">
+              <t-icon name="control-platform" />
+              <span>{{ $t('admin.menu.models') }}</span>
+            </t-menu-item>
           </t-menu>
         </div>
 
