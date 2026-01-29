@@ -74,11 +74,13 @@ type WebFetchTool struct {
 
 // NewWebFetchTool creates a new web_fetch tool instance
 func NewWebFetchTool(chatModel chat.Chat) *WebFetchTool {
+	// Use SSRF-safe HTTP client to prevent redirect-based SSRF attacks
+	ssrfConfig := utils.DefaultSSRFSafeHTTPClientConfig()
+	ssrfConfig.Timeout = webFetchTimeout
+
 	return &WebFetchTool{
-		BaseTool: webFetchTool,
-		client: &http.Client{
-			Timeout: webFetchTimeout,
-		},
+		BaseTool:  webFetchTool,
+		client:    utils.NewSSRFSafeHTTPClient(ssrfConfig),
 		chatModel: chatModel,
 	}
 }
@@ -243,6 +245,12 @@ func (t *WebFetchTool) validateParams(p webFetchParams) error {
 	if !strings.HasPrefix(p.URL, "http://") && !strings.HasPrefix(p.URL, "https://") {
 		return fmt.Errorf("invalid URL format")
 	}
+
+	// SSRF protection: validate URL is safe to fetch
+	if safe, reason := utils.IsSSRFSafeURL(p.URL); !safe {
+		return fmt.Errorf("URL rejected for security reasons: %s", reason)
+	}
+
 	return nil
 }
 
